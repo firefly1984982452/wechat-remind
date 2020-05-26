@@ -47,15 +47,11 @@
 							key: this.remindKey,
 							data: [],
 							success: (res) => {
-								uni.showModal({
-									title: '存储数据成功',
-									content: ' ',
-									showCancel:false
-								})
+								console.log('初始化存储数据成功')
 							},
 							fail: () => {
 								uni.showModal({
-									title: '储存数据失败!',
+									title: '初始化存储数据失败!',
 									showCancel:false
 								})
 							}
@@ -67,29 +63,65 @@
                 this.time = e
 			},
 			submit(){
-				let item = {
-					content:this.content,
-					time:this.time
-				}
-				this.remindList.push(item);
-				uni.setStorage({
-					key: this.remindKey,
-					data: this.remindList,
-					success: (res) => {
-						uni.showToast({
-							title: "添加提醒成功",
-							duration: 1000
+				wx.requestSubscribeMessage({
+					tmplIds: ['yKXlE3VZ3d02VnvecwikrZedfVX3zpkFWuoeZRZ8r-o'],
+					success (res) {
+						console.log(res)
+						let item = {
+							content:this.content,
+							time:this.time
+						}
+						this.remindList.push(item);
+						uni.setStorage({
+							key: this.remindKey,
+							data: this.remindList,
+							success: (res) => {
+								this.send();
+								uni.showToast({
+									title: "添加提醒成功",
+									duration: 1000
+								})
+								this.content = '';
+								this.time = '';
+							},
+							fail: () => {
+								uni.showModal({
+									title: '添加提醒失败!',
+									showCancel:false
+								})
+							}
 						})
-						this.content = '';
-						this.time = '';
 					},
-					fail: () => {
+					fail (res) {
 						uni.showModal({
-							title: '添加提醒失败!',
+							title: '授权失败!',
 							showCancel:false
 						})
 					}
 				})
+			},
+			send(){
+ 
+			// 发订阅消息
+				// 发送模板消息
+				target_wechat = WeChatService( )
+				access_token = target_wechat.getAccessToken()
+				headers = {'Content-Type': 'application/json'}
+				url = "https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token=%s"%access_token
+				params = {
+					"touser": oauth_bind_info.openid,
+					"template_id":"yKXlE3VZ3d02VnvecwikrZedfVX3zpkFWuoeZRZ8r-o",
+					"page": "pages/index",
+					"data": {
+						"thing8": {
+							"DATA": this.content
+						},
+						"thing13": {
+							"DATA": this.time
+						}
+					}
+				}
+ 
 			},
 			del(item,index){
 				uni.showModal({

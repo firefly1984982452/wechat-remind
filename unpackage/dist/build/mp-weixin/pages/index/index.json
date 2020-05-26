@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "微信提醒",
+  "usingComponents": {
+    "e-picker": "/components/e-picker/e-picker"
+  }
+}
