@@ -28,13 +28,26 @@
 				remindList:[],
 				content:'',
 				time: '',
-				remindKey:'remindKey'
+				remindKey:'remindKey',
+				openID: '',
 			}
 		},
 		onLoad() {
-			this.init()
+			this.getOpenid();
+			this.init();
 		},
 		methods: {
+			getOpenid(){
+				let that = this;
+				wx.cloud.callFunction({
+					name: 'getOpenID',
+					complete: res => {
+						console.log('云函数获取到的openid: ', res.result.openId)
+						var openid = res.result.openId;
+						that.openID = openid;
+					}
+				})
+			},
 			init(){
 				uni.getStorage({
 					key: this.remindKey,
