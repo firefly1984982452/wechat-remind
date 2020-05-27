@@ -2,6 +2,9 @@
 	export default {
 		onLaunch: function() {
 			console.log('App Launch')
+			wx.cloud.init({  
+				env:'pd-b8250e'
+			})
 		},
 		onShow: function() {
 			console.log('App Show')
