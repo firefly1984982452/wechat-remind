@@ -1,5 +1,6 @@
 <template>
 	<view class="page">
+		<button type="primary" class="button" plain="true" @click="requestSubscribeMessage" size="mini">授权</button>
 		<view class="input">
 			<view class="line">
 				<text class="name">内容：</text>
@@ -11,7 +12,7 @@
 				<text class="name">时间：</text>
 				<e-picker mode="dateTime" class="input-time"  @change="change">{{time||'选择日期'}}</e-picker>
 			</view>
-			<button type="primary" class="button" plain="true" @click="submit" size="mini">确定</button>
+			<button type="primary" class="button" plain="true" @click="send" size="mini">确定</button>
 		</view>
 		<view v-for="(item,index) in remindList" :key="index" class="list">
 			<text class="content">{{item.content}}</text>
@@ -31,48 +32,60 @@
 				remindKey:'remindKey',
 				openID: '',
 				userCode:'',
+				token:'',
 			}
 		},
 		onLoad() {
-			this.login();
 			this.init();
+			this.login();
 		},
 		methods: {
+			// 获取用户信息
 			login(){
 				uni.login({
 					provider: 'weixin',
 					success:  loginRes => {
 						console.log(loginRes.code);
-						this.userCode = loginRes.code
-						this.getOpenid();
-						// 获取用户信息
-						uni.getUserInfo({
-							provider: 'weixin',
-							success: function (infoRes) {
-								console.log('用户昵称为：' + infoRes.userInfo.nickName);
-							}
-						});
+						this.userCode = loginRes.code;
+			this.getOpenid();
 					}
 				});
 			},
-			getOpenid(){
+			// 获取openID
+			async getOpenid(){
 				let params = {
 					appid:'wx8bda0c57123111e7',
 					secret: 'ccc431411276f087b41f680275e457a8',
 					js_code: this.userCode,
 					grant_type: 'authorization_code',
 				}
-				uni.request({
+				await uni.request({
 					url: 'https://api.weixin.qq.com/sns/jscode2session',
 					data: params,
 					success: (res) => {
 						console.log(res.data);
 						this.openID = res.data.openid;
 						console.log('openID:'+this.openID)
-						this.send();
+			this.getToken();
 					}
 				});
 			},
+			// 获取token
+			async getToken(){
+				let params = {
+					appid:'wx8bda0c57123111e7',
+					secret: 'ccc431411276f087b41f680275e457a8',
+					grant_type: 'client_credential',
+				}
+				await uni.request({
+					url: 'https://api.weixin.qq.com/cgi-bin/token',
+					data: params,
+					success: (res) => {
+						this.token = res.data.access_token;
+					}
+				});
+			},
+			// 初始化，看有没有存储的数据
 			init(){
 				uni.getStorage({
 					key: this.remindKey,
@@ -100,66 +113,83 @@
             change(e) {
                 this.time = e
 			},
-			submit(){
+			// 获取授权
+			requestSubscribeMessage(){
 				wx.requestSubscribeMessage({
 					tmplIds: ['yKXlE3VZ3d02VnvecwikrZedfVX3zpkFWuoeZRZ8r-o'],
 					success (res) {
 						console.log(res)
-						let item = {
-							content:this.content,
-							time:this.time
-						}
-						this.remindList.push(item);
-						uni.setStorage({
-							key: this.remindKey,
-							data: this.remindList,
-							success: (res) => {
-								uni.showToast({
-									title: "添加提醒成功",
-									duration: 1000
-								})
-								this.content = '';
-								this.time = '';
-							},
-							fail: () => {
-								uni.showModal({
-									title: '添加提醒失败!',
-									showCancel:false
-								})
-							}
+						uni.showModal({
+							title: '授权成功!',
+							showCancel:false
 						})
 					},
 					fail (res) {
+						console.log(res)
 						uni.showModal({
 							title: '授权失败!',
 							showCancel:false
 						})
 					}
 				})
+
 			},
+			// 添加提醒后保存到本地
+			save(){
+				let item = {
+					content:this.content,
+					time:this.time
+				}
+				this.remindList.push(item);
+				uni.setStorage({
+					key: this.remindKey,
+					data: this.remindList,
+					success: (res) => {
+						uni.showToast({
+							title: "添加提醒成功",
+							duration: 1000
+						})
+						this.content = '';
+						this.time = '';
+					},
+					fail: () => {
+					}
+				})
+			},
+			// 发送
 			send(){
- 
-			// 发订阅消息
-				// 发送模板消息
-				target_wechat = WeChatService( )
-				access_token = target_wechat.getAccessToken()
-				headers = {'Content-Type': 'application/json'}
-				url = "https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token=%s"%access_token
-				params = {
-					"touser": this.openID,
-					"template_id":"yKXlE3VZ3d02VnvecwikrZedfVX3zpkFWuoeZRZ8r-o",
-					"page": "pages/index",
-					"data": {
+				let params = {
+					touser: this.openID,
+					template_id: "yKXlE3VZ3d02VnvecwikrZedfVX3zpkFWuoeZRZ8r-o",
+					data: {
 						"thing8": {
-							"DATA": this.content
+							"value": this.content
 						},
-						"thing13": {
-							"DATA": this.time
+						"time13": {
+							"value": this.time
+						}
+					},
+					page:'index'
+				}
+				uni.request({
+					url: 'https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token=' + this.token,
+					data: JSON.stringify(params),
+					method: "POST",
+					success: (res) => {
+						console.log(res.data.errcode);
+						if (res.data.errcode == 0) {
+							this.save();
+						} else {
+							uni.showModal({
+								title: '添加提醒失败，请授权!',
+								showCancel:false
+							})
 						}
 					}
-				}
+				});
  
 			},
+			// 删除
 			del(item,index){
 				uni.showModal({
 					title: '提示',
@@ -200,7 +230,9 @@
 	.input {
 		display: flex;
 		flex-direction: column;
-		margin: 0 0 20rpx 0;
+		justify-content: space-between;
+		height: 300rpx;
+		margin: 50rpx 0 20rpx 0;
 	}
 	.line{
 		display: flex;

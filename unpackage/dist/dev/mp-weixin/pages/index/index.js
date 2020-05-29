@@ -139,7 +139,8 @@ __webpack_require__.r(__webpack_exports__);
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; //
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _regenerator = _interopRequireDefault(__webpack_require__(/*! ./node_modules/@vue/babel-preset-app/node_modules/@babel/runtime/regenerator */ 27));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};} //
+//
 //
 //
 //
@@ -171,14 +172,16 @@ var _default =
       time: '',
       remindKey: 'remindKey',
       openID: '',
-      userCode: '' };
+      userCode: '',
+      token: '' };
 
   },
   onLoad: function onLoad() {
-    this.login();
     this.init();
+    this.login();
   },
   methods: {
+    // 获取用户信息
     login: function login() {var _this = this;
       uni.login({
         provider: 'weixin',
@@ -186,44 +189,54 @@ var _default =
           console.log(loginRes.code);
           _this.userCode = loginRes.code;
           _this.getOpenid();
-          // 获取用户信息
-          uni.getUserInfo({
-            provider: 'weixin',
-            success: function success(infoRes) {
-              console.log('用户昵称为：' + infoRes.userInfo.nickName);
-            } });
-
         } });
 
     },
-    getOpenid: function getOpenid() {var _this2 = this;
-      var params = {
-        appid: 'wx8bda0c57123111e7',
-        secret: 'ccc431411276f087b41f680275e457a8',
-        js_code: this.userCode,
-        grant_type: 'authorization_code' };
+    // 获取openID
+    getOpenid: function getOpenid() {var _this2 = this;return _asyncToGenerator( /*#__PURE__*/_regenerator.default.mark(function _callee() {var params;return _regenerator.default.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:
+                params = {
+                  appid: 'wx8bda0c57123111e7',
+                  secret: 'ccc431411276f087b41f680275e457a8',
+                  js_code: _this2.userCode,
+                  grant_type: 'authorization_code' };_context.next = 3;return (
 
-      uni.request({
-        url: 'https://api.weixin.qq.com/sns/jscode2session',
-        data: params,
-        success: function success(res) {
-          console.log(res.data);
-          _this2.openID = res.data.openid;
-          console.log('openID:' + _this2.openID);
-          _this2.send();
-        } });
+                  uni.request({
+                    url: 'https://api.weixin.qq.com/sns/jscode2session',
+                    data: params,
+                    success: function success(res) {
+                      console.log(res.data);
+                      _this2.openID = res.data.openid;
+                      console.log('openID:' + _this2.openID);
+                      _this2.getToken();
+                    } }));case 3:case "end":return _context.stop();}}}, _callee);}))();
 
     },
-    init: function init() {var _this3 = this;
+    // 获取token
+    getToken: function getToken() {var _this3 = this;return _asyncToGenerator( /*#__PURE__*/_regenerator.default.mark(function _callee2() {var params;return _regenerator.default.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:
+                params = {
+                  appid: 'wx8bda0c57123111e7',
+                  secret: 'ccc431411276f087b41f680275e457a8',
+                  grant_type: 'client_credential' };_context2.next = 3;return (
+
+                  uni.request({
+                    url: 'https://api.weixin.qq.com/cgi-bin/token',
+                    data: params,
+                    success: function success(res) {
+                      _this3.token = res.data.access_token;
+                    } }));case 3:case "end":return _context2.stop();}}}, _callee2);}))();
+
+    },
+    // 初始化，看有没有存储的数据
+    init: function init() {var _this4 = this;
       uni.getStorage({
         key: this.remindKey,
         success: function success(res) {
           console.log(res.data);
-          _this3.remindList = res.data;
+          _this4.remindList = res.data;
         },
         fail: function fail() {
           uni.setStorage({
-            key: _this3.remindKey,
+            key: _this4.remindKey,
             data: [],
             success: function success(res) {
               console.log('初始化存储数据成功');
@@ -241,76 +254,93 @@ var _default =
     change: function change(e) {
       this.time = e;
     },
-    submit: function submit() {
+    // 获取授权
+    requestSubscribeMessage: function requestSubscribeMessage() {
       wx.requestSubscribeMessage({
         tmplIds: ['yKXlE3VZ3d02VnvecwikrZedfVX3zpkFWuoeZRZ8r-o'],
-        success: function success(res) {var _this4 = this;
+        success: function success(res) {
           console.log(res);
-          var item = {
-            content: this.content,
-            time: this.time };
-
-          this.remindList.push(item);
-          uni.setStorage({
-            key: this.remindKey,
-            data: this.remindList,
-            success: function success(res) {
-              uni.showToast({
-                title: "添加提醒成功",
-                duration: 1000 });
-
-              _this4.content = '';
-              _this4.time = '';
-            },
-            fail: function fail() {
-              uni.showModal({
-                title: '添加提醒失败!',
-                showCancel: false });
-
-            } });
+          uni.showModal({
+            title: '授权成功!',
+            showCancel: false });
 
         },
         fail: function fail(res) {
+          console.log(res);
           uni.showModal({
             title: '授权失败!',
             showCancel: false });
 
         } });
 
-    },
-    send: function send() {
 
-      // 发订阅消息
-      // 发送模板消息
-      target_wechat = WeChatService();
-      access_token = target_wechat.getAccessToken();
-      headers = { 'Content-Type': 'application/json' };
-      url = "https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token=%s" % access_token;
-      params = {
-        "touser": this.openID,
-        "template_id": "yKXlE3VZ3d02VnvecwikrZedfVX3zpkFWuoeZRZ8r-o",
-        "page": "pages/index",
-        "data": {
+    },
+    // 添加提醒后保存到本地
+    save: function save() {var _this5 = this;
+      var item = {
+        content: this.content,
+        time: this.time };
+
+      this.remindList.push(item);
+      uni.setStorage({
+        key: this.remindKey,
+        data: this.remindList,
+        success: function success(res) {
+          uni.showToast({
+            title: "添加提醒成功",
+            duration: 1000 });
+
+          _this5.content = '';
+          _this5.time = '';
+        },
+        fail: function fail() {
+        } });
+
+    },
+    // 发送
+    send: function send() {var _this6 = this;
+      var params = {
+        touser: this.openID,
+        template_id: "yKXlE3VZ3d02VnvecwikrZedfVX3zpkFWuoeZRZ8r-o",
+        data: {
           "thing8": {
-            "DATA": this.content },
+            "value": this.content },
 
-          "thing13": {
-            "DATA": this.time } } };
+          "time13": {
+            "value": this.time } },
 
 
+        page: 'index' };
+
+      uni.request({
+        url: 'https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token=' + this.token,
+        data: JSON.stringify(params),
+        method: "POST",
+        success: function success(res) {
+          console.log(res.data.errcode);
+          if (res.data.errcode == 0) {
+            _this6.save();
+          } else {
+            uni.showModal({
+              title: '添加提醒失败，请授权!',
+              showCancel: false });
+
+          }
+        } });
 
 
     },
-    del: function del(item, index) {var _this5 = this;
+    // 删除
+    del: function del(item, index) {var _this7 = this;
       uni.showModal({
         title: '提示',
         content: '是否删除',
         success: function success(res) {
           if (res.confirm) {
-            _this5.remindList.splice(index, 1);
+            _this7.remindList.splice(index, 1);
             uni.setStorage({
-              key: _this5.remindKey,
-              data: _this5.remindList,
+              key: _this7.remindKey,
+              data: _this7.remindList,
               success: function success(res) {
                 uni.showToast({
                   title: "删除成功",

@@ -10,7 +10,11 @@
 	-webkit-box-direction: normal;
 	-webkit-flex-direction: column;
 	        flex-direction: column;
-	margin: 0 0 20rpx 0;
+	-webkit-box-pack: justify;
+	-webkit-justify-content: space-between;
+	        justify-content: space-between;
+	height: 300rpx;
+	margin: 50rpx 0 20rpx 0;
 }
 .line{
 	display: -webkit-box;

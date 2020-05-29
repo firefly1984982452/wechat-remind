@@ -7,7 +7,7 @@
 		"urlCheck": false
 	},
 	"compileType": "miniprogram",
-	"libVersion": "2.9.2",
+	"libVersion": "2.11.0",
 	"appid": "wx8bda0c57123111e7",
 	"projectname": "wechat-remind",
 	"cloudfunctionRoot": "static/cloudfunctions/",
