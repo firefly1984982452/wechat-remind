@@ -30,23 +30,48 @@
 				time: '',
 				remindKey:'remindKey',
 				openID: '',
+				userCode:'',
 			}
 		},
 		onLoad() {
-			this.getOpenid();
+			this.login();
 			this.init();
 		},
 		methods: {
-			getOpenid(){
-				let that = this;
-				wx.cloud.callFunction({
-					name: 'getOpenID',
-					complete: res => {
-						console.log('云函数获取到的openid: ', res.result.openId)
-						var openid = res.result.openId;
-						that.openID = openid;
+			login(){
+				uni.login({
+					provider: 'weixin',
+					success:  loginRes => {
+						console.log(loginRes.code);
+						this.userCode = loginRes.code
+						this.getOpenid();
+						// 获取用户信息
+						uni.getUserInfo({
+							provider: 'weixin',
+							success: function (infoRes) {
+								console.log('用户昵称为：' + infoRes.userInfo.nickName);
+							}
+						});
 					}
-				})
+				});
+			},
+			getOpenid(){
+				let params = {
+					appid:'wx8bda0c57123111e7',
+					secret: 'ccc431411276f087b41f680275e457a8',
+					js_code: this.userCode,
+					grant_type: 'authorization_code',
+				}
+				uni.request({
+					url: 'https://api.weixin.qq.com/sns/jscode2session',
+					data: params,
+					success: (res) => {
+						console.log(res.data);
+						this.openID = res.data.openid;
+						console.log('openID:'+this.openID)
+						this.send();
+					}
+				});
 			},
 			init(){
 				uni.getStorage({
@@ -89,7 +114,6 @@
 							key: this.remindKey,
 							data: this.remindList,
 							success: (res) => {
-								this.send();
 								uni.showToast({
 									title: "添加提醒成功",
 									duration: 1000
@@ -122,7 +146,7 @@
 				headers = {'Content-Type': 'application/json'}
 				url = "https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token=%s"%access_token
 				params = {
-					"touser": oauth_bind_info.openid,
+					"touser": this.openID,
 					"template_id":"yKXlE3VZ3d02VnvecwikrZedfVX3zpkFWuoeZRZ8r-o",
 					"page": "pages/index",
 					"data": {
