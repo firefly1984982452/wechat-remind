@@ -293,7 +293,11 @@ var _default =
           _this5.content = '';
           _this5.time = '';
         },
-        fail: function fail() {
+        fail: function fail(res) {
+          uni.showToast({
+            title: "保存本地失败" + res,
+            duration: 1000 });
+
         } });
 
     },
@@ -326,6 +330,12 @@ var _default =
               showCancel: false });
 
           }
+        },
+        fail: function fail(res) {
+          uni.showModal({
+            title: '添加提醒失败，' + JSON.parse(res),
+            showCancel: false });
+
         } });
 
 

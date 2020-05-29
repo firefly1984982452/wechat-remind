@@ -152,7 +152,11 @@
 						this.content = '';
 						this.time = '';
 					},
-					fail: () => {
+					fail: (res) => {
+						uni.showToast({
+							title: "保存本地失败" +res,
+							duration: 1000
+						})
 					}
 				})
 			},
@@ -185,6 +189,12 @@
 								showCancel:false
 							})
 						}
+					},
+					fail: (res) => {
+						uni.showModal({
+							title: '添加提醒失败，'+JSON.parse(res),
+							showCancel:false
+						})
 					}
 				});
  
