@@ -12,9 +12,9 @@
 				<text class="name">时间：</text>
 				<e-picker mode="dateTime" class="input-time"  @change="change">{{time||'选择日期'}}</e-picker>
 			</view>
-			<button type="primary" class="button" plain="true" @click="send" size="mini">确定</button>
+			<button type="primary" class="button" plain="true" @click="save" size="mini">确定</button>
 		</view>
-		<view v-for="(item,index) in remindList" :key="index" class="list">
+		<view v-for="(item,index) in remindList" :key="index" class="list" @click="detail(item)">
 			<text class="content">{{item.content}}</text>
 			<text class="time">{{item.time}}</text>
 			<text class="del" @click="del(item,index)">删除</text>
@@ -23,7 +23,21 @@
 </template>
 
 <script>
+	import {
+		mapState
+	} from 'vuex';
 	export default {
+		// computed: mapState(['info']),
+		computed: {
+			info:{
+				get:function(){
+					return this.$store.state.info
+				},
+				set:function(){
+					return this.$store.state.info
+				}
+			}
+		},
 		data() {
 			return {
 				remindList:[],
@@ -40,6 +54,9 @@
 			this.login();
 		},
 		methods: {
+			detail(item){
+				this.info = item;
+			},
 			// 获取用户信息
 			login(){
 				uni.login({
